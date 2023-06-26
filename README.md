@@ -4,7 +4,7 @@ A vision-based order pickup solution which leverages ML on the edge capabilities
 
 ## Solution overview
 
-Solution [high level architecture](https://dev.azure.com/CSECodeHub/536244%20-%20Vision%20Based%20Order%20Pickup%20Experience/_git/536244%20-%20Vision%20Based%20Order%20Pickup%20Experience?path=/docs/design/high-level-architecture.md&version=GBmain)
+Solution [high level architecture](./docs/high-level-architecture.md)
 
 ## Solution user guide
 
@@ -144,7 +144,7 @@ Instead of using the default test video file, the solution can be configured to 
 1. Now you should be able to see the camera feed while accessing the solution as described in the [accessing the solution](#accessing-the-solution-1) section.
 1. To test the solution place some test order items with label as created in the [prerequisites](#prerequisites-1) section in front of the camera and see the solution in action.
 
-### Additional Notes:
+### Additional Notes
 
 - This solution is pre-packaged with a custom Azure Form Recognizer model, which is trained with labels similar to what is there in [test video file](./label-reader/modules/label_extraction/local_data/order_label_test_video.mp4). If you want to use this solution with your own label formats, please refer the [Bring your own label (BYOL)](#bring-your-own-label-byol) section.
 - This solution may works with a RTSP camera as well, but it is not tested. If you want to use this solution with a RTSP camera, please change the value of `CAMERA_PATH` to `'<RTSP address>'` in the .env (`./label-reader/.env`) file and do let us know how is the experience.
@@ -159,7 +159,7 @@ The solution can be experimented with different configurations parameters like T
 
 The following steps are required to use this solution with your own label formats:
 
-1. Train a custom Azure Form Recognizer model with your own label formats by following the steps mentioned in [Bring Your Own Label design document](https://dev.azure.com/CSECodeHub/536244%20-%20Vision%20Based%20Order%20Pickup%20Experience/_git/536244%20-%20Vision%20Based%20Order%20Pickup%20Experience?path=/docs/design/byol-implementation-details.md&version=GBmain)
+1. Train a custom Azure Form Recognizer model with your own label formats by following the steps mentioned in [Bring Your Own Label design document](./docs/byol-implementation-details.md)
 1. Once the model is trained, update the new model id in the .env (`./label-reader/.env`) file.
    - `AZURE_COGNITIVE_SERVICE_FORMRECOG_MODEL_ID` - The model id of the custom Azure Form Recognizer model.
    - `AZURE_COGNITIVE_SERVICE_FORMRECOG_KEY` - If the custom Azure Form Recognizer model is in a different Azure resource, then update the key of the custom Azure Form Recognizer resource, else keep the same as updated by deployment script.
