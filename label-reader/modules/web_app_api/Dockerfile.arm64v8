@@ -1,0 +1,34 @@
+#
+# building application image from base image as args
+#
+FROM arm64v8/python:3.9-bullseye
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    python3-pip \
+    python3-dev \
+    cmake \
+    nano \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+#
+# application setup
+#
+WORKDIR /app
+COPY requirements.txt ./
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+COPY . .
+
+ENV APPINSIGHTS_CONNECTION_STRING=""
+ENV IOTEDGE_DEVICEID=""
+ENV IOTEDGE_MODULEID=""
+ENV BLOB_STORAGE_CONN_STRING=""
+ENV AZURE_BLOB_STORAGE_CONTAINER_NAME=""
+
+#
+# call main script
+#
+EXPOSE 7001
+CMD [ "python", "-u", "./main.py" ]

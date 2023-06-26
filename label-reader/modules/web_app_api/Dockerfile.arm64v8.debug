@@ -1,0 +1,25 @@
+#
+# building application image from base image as args
+#
+FROM python:3.9-bullseye
+
+#
+# application setup
+#
+RUN pip install ptvsd==4.1.3
+WORKDIR /app
+COPY requirements.txt ./
+RUN pip install -r requirements.txt
+COPY . .
+
+ENV APPINSIGHTS_CONNECTION_STRING=""
+ENV IOTEDGE_DEVICEID=""
+ENV IOTEDGE_MODULEID=""
+ENV BLOB_STORAGE_CONN_STRING=""
+ENV AZURE_BLOB_STORAGE_CONTAINER_NAME=""
+
+#
+# call main script
+#
+EXPOSE 7001
+CMD [ "python", "-u", "./main.py" ]

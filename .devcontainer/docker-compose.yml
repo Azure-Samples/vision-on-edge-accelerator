@@ -1,0 +1,26 @@
+---
+version: '3'
+services:
+  dev_container:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+      args:
+        VARIANT: 3.9-bullseye
+        NODE_VERSION: lts/*
+    environment:
+      DOCKER_BUILDKIT: 1
+      COMPOSE_DOCKER_CLI_BUILD: 1
+    volumes:
+      - ..:/workspace:cached
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    runtime: ${DOCKER_RUNTIME:-runc}
+    devices:
+      - ${VIDEO_DEVICE:-/dev/null}:/dev/video0
+      # privileged: true
+      # deploy:
+      #   resources:
+      #     reservations:
+      #       devices:
+      #         - driver: nvidia
+      #           capabilities: [gpu,compute,video,utility]

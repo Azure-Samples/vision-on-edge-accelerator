@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "label-reader/modules/label_extraction"
+		},
+		{
+			"path": "label-reader/modules/web_app_api"
+		},
+		{
+			"path": ".",
+			"name": "root",
+		}
+	],
+	"settings": {}
+}

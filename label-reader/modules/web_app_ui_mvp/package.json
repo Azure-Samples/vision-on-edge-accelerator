@@ -1,0 +1,12 @@
+{
+    "name": "web_app_ui_mvp",
+    "version": "0.0.1",
+    "description": "Azure IoT Edge module for classic UI",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Azure/generator-azure-iot-edge-module"
+    },
+    "license": "MIT",
+    "dependencies": {
+    }
+}

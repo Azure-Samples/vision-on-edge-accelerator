@@ -1,0 +1,6 @@
+# Never modify line endings of our bash scripts
+*.sh -crlf
+
+# These files are binary and should be left untouched
+# (binary is macro for -text -diff)
+*.onnx  binary

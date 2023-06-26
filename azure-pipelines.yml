@@ -1,0 +1,108 @@
+# Configuration file for Azure devops pipeline
+---
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - name: pip_cache_dir
+    value: $(Pipeline.Workspace)/.pip
+
+stages:
+  - stage: SanityCheck
+    displayName: Setup and run tests
+    jobs:
+      - job: scan_for_secrets
+        steps:
+          - task: UsePythonVersion@0
+            displayName: "Set python v3.9"
+            inputs:
+              versionSpec: "3.9"
+          - bash: pip install detect-secrets
+            displayName: "Install detect-secrets using pip"
+          - bash: |
+              detect-secrets --version
+              detect-secrets scan --all-files --force-use-all-plugins --exclude-files FETCH_HEAD > $(Pipeline.Workspace)/detect-secrets.json
+            displayName: "Run detect-secrets tool"
+          - task: PublishPipelineArtifact@1
+            displayName: "Publish results in the Pipeline Artifact"
+            inputs:
+              targetPath: "$(Pipeline.Workspace)/detect-secrets.json"
+              artifact: "detect-secrets-ubuntu"
+              publishLocation: "pipeline"
+          - bash: |
+              dsjson=$(cat $(Pipeline.Workspace)/detect-secrets.json)
+              echo "${dsjson}"
+
+              count=$(echo "${dsjson}" | jq -c -r '.results | length')
+
+              if [ $count -gt 0 ]; then
+                msg="Secrets were detected in code. ${count} file(s) affected."
+                echo "##vso[task.logissue type=error]${msg}"
+                echo "##vso[task.complete result=Failed;]${msg}."
+              else
+                echo "##vso[task.complete result=Succeeded;]No secrets detected."
+              fi
+            displayName: "Analyzing detect-secrets results"
+
+      - job: lint_checks
+        steps:
+          - script: |
+              docker pull oxsecurity/megalinter:v6.8.0
+              docker run -v $(System.DefaultWorkingDirectory):/tmp/lint -e GIT_AUTHORIZATION_BEARER=$(System.AccessToken) oxsecurity/megalinter:v6.8.0
+            displayName: 'MegaLinter analysis'
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Artifact: MegaLinter Report'
+            condition: succeededOrFailed()
+            inputs:
+              targetPath: '$(System.DefaultWorkingDirectory)/megalinter-reports/'
+              artifactName: mega-linter-reports
+      - job: unit_tests
+        steps:
+          - task: UsePythonVersion@0
+            displayName: "Set python v3.9"
+            inputs:
+              versionSpec: "3.9"
+          - task: Cache@2
+            inputs:
+              key: 'pip | "$(Agent.OS)" | requirements.txt'
+              restoreKeys: |
+                pip | "$(Agent.OS)"
+              path: $(pip_cache_dir)
+            displayName: "Cache pip"
+          - bash: make install
+            displayName: "Install pip packages"
+          - bash: make label_extraction_tests
+            displayName: "Running label extraction tests"
+          - bash: make web_app_api_tests
+            displayName: "Running web app api tests"
+          - task: PublishTestResults@2
+            displayName: "Publishing unit test results"
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '$(System.DefaultWorkingDirectory)/**/nose2-junit.xml'
+              failTaskOnFailedTests: true
+              testRunTitle: 'Label extraction Unit tests'
+          - task: reportgenerator@5
+            displayName: "Combine coverage reports"
+            inputs:
+              reports: '$(System.DefaultWorkingDirectory)/label-reader/modules/**/coverage.xml'
+              targetdir: '$(System.DefaultWorkingDirectory)/label-reader/modules/coverage-results'
+          - task: PublishCodeCoverageResults@1
+            displayName: "Publishing code coverage for label-extraction"
+            inputs:
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: '$(System.DefaultWorkingDirectory)/label-reader/modules/coverage-results/Cobertura.xml'
+              failIfCoverageEmpty: true
+          - task: BuildQualityChecks@8
+            displayName: "Checking code coverage threshold"
+            inputs:
+              checkCoverage: true
+              coverageFailOption: 'fixed'
+              coverageType: 'lines'
+              coverageThreshold: '80'
