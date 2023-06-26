@@ -1,0 +1,126 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "Azure OCR Post Processing",
+  "steps": [
+    {
+      "title": "Introduction",
+      "description": "This tour walks you through detail steps on how labels are extracted from Azure OCR result."
+    },
+    {
+      "file": "src/ocr/post_processing.py",
+      "description": "`camera_filter_text` and `cup_filter_text` are configurations that contains filler words we want to remove from Azure OCR Result",
+      "pattern": "^[^\\S\\n]*self\\.filter_texts = \\[",
+      "title": "Configuration"
+    },
+    {
+      "file": "src/ocr/post_processing.py",
+      "description": "Some camera (and test data set) embed timestamp on the video feed. The regex is used to remove the timestamp from OCR Result.",
+      "pattern": "^[^\\S\\n]*self\\.timestamp_filter_text = re\\.compile\\(r\"\\\\d\\{2\\}:\\\\d\\{2\\}:\\\\d\\{2\\}\"\\)",
+      "title": "Configuration"
+    },
+    {
+      "file": "src/ocr/post_processing.py",
+      "description": "`extract_labels` is the only public function of [post_processing.py](src/ocr/post_processing.py) which accepts `ReadResult` (OCR Result) and ouputs the labels detected in `OrderLabelInfo`",
+      "pattern": "^[^\\S\\n]*def extract_labels\\(self, read_result: ReadResult\\) -> Union\\[OrderLabelInfo, None\\]:",
+      "title": "Extract labels"
+    },
+    {
+      "file": "src/ocr/post_processing.py",
+      "description": "We parse the Azure OCR result and create list of candidate labels. While parsing the OCR result we extract each `Line` detected by OCR, `words` in each line, confidence score of detected line and bounding box of each line. Candidate labels are collection of such `Line`s which have potential to contain the labels we are interested in. ",
+      "pattern": "^[^\\S\\n]*candidate_labels = self\\._create_label_candidates\\(read_result\\)"
+    },
+    {
+      "file": "src/ocr/post_processing.py",
+      "description": "Once we get candidate labels, we first find out which line is order number. This is a key step in the post processing as we use Order Number line as anchor to infer other labels. All other relevant labels (pickup phrase, customer name and item name) must appear \"below\" order number in the printed label.",
+      "pattern": "^[^\\S\\n]*order_number_info = self\\.label_info_extractor\\._infer_order_line\\("
+    },
+    {
+      "file": "src/ocr/post_processing.py",
+      "description": "All relevant labels (pickup phrase, customer name and item name) must appear \"below\" order number in the printed label. The format of label is fixed as below\n```\norder_type order_number\npickup_phrase 1of1\ncustomer_name\nitem_name_CN\nitem_name_EN\n```\nTherefore we want to calculate the distance of each line in OCR result from order line so that we can sort them and read the lines in order to infer other labels. Calculation of distance is done by `_calculate_distance_from_order_line`. We also want to identify the relative position (above or below) of lines with respect to order line. This is done by `_set_box_position_with_order_line` method.",
+      "pattern": "^[^\\S\\n]*self\\._calculate_distance_from_order_line\\(order_line, candidate_labels\\)"
+    },
+    {
+      "file": "src/ocr/post_processing.py",
+      "description": "However the printed label on the cup can appear slanted. Therefore to accurately determine the distance of each line to order line we have 2 approaches - \n- Rotate the entire image by the slope of the order line's bounding box length. Assumption is that all other relevant labels will also be inclined at approx same angle.\n- Calculate the perpendicular distance of all the line's center point to order line's bounding box's bottom line. The perpendicular distance will remain rotation invariant.\n\nWe went ahead with perpendicular distance calculation approach.",
+      "pattern": "^[^\\S\\n]*distance = self\\._get_perpendicular\\(",
+      "title": "Perpendicular Distance"
+    },
+    {
+      "file": "src/ocr/post_processing.py",
+      "description": "### Calculate relative position of candidate labels with respect to order line\n\nTo find relative position of candidate label with respect to order number line, we find out whether the center point of candidate label is above or below the bottom edge of order number line.\n\n`_is_point_above_line` checks wether the three points are colinear using the following formula.\nGiven three points coordinate `x0,y0`, `x1,y1` and `x2,y2`\n```\n(y2-y1) * (x0-x1) - (x2-x1)*(y0-y1) = 0\n```\n\n Using this function we can identify if the midpoint of candidate label is above order line or not.\n\n\n Because the origin (0,0) of coordinate system lies in top left of them image, we need to invert the result (`not pos`) before assigning it to the line.",
+      "pattern": "^[^\\S\\n]*pos = self\\._is_point_above_line\\(",
+      "title": "Position of box wrt Order Line"
+    },
+    {
+      "file": "src/ocr/post_processing.py",
+      "description": "`self._prune_boxes` filter out the lines which appear *left*, *right* or *top* of order line. This gives us set of candidate lines on which we can try to infer rest of the labels. We then call `extract_label_info` to infer rest of the labels.",
+      "pattern": "^[^\\S\\n]*candidate_labels\\.lines = self\\._prune_boxes\\(order_line, candidate_labels\\.lines\\)",
+      "title": "Pruning Boxes"
+    },
+    {
+      "file": "src/ocr/post_processing.py",
+      "description": "When pruning boxes we have a toleration limit as configurable setting. Toleration limit is used to filter boxes whose edges are *narrowly* overlapping.",
+      "pattern": "^[^\\S\\n]*- self\\.ocr_post_processing_config\\.prune_toleration_limit",
+      "title": "Prune toleration limit"
+    },
+    {
+      "file": "src/ocr/label_extractor.py",
+      "description": "We sort the candidate labels by their distance to order line. At this stage only the lines below the order line remains as candidate labels.",
+      "pattern": "^[^\\S\\n]*self\\._sort_by_distance_to_order_line\\(candidate_labels\\.lines\\)",
+      "title": "Extracting Other Labels"
+    },
+    {
+      "file": "src/ocr/label_extractor.py",
+      "description": "Text such as _*x*of*y*_ (eg 1of2) exists in all types of labels. Identifying this line gives us our second anchor point (first anchor point is order number line). We will refer this as `qty_line`. However it is not guaranteed that we will be able to detect this line. The Azure OCR itself may not be able to detect the text. We identify this line by using a REGEX expression.",
+      "pattern": "^[^\\S\\n]*\\(qty_line, qty_index, qty_match\\) = self\\._infer_qty_line\\(candidate_labels\\.lines\\)",
+      "title": "qty_line"
+    },
+    {
+      "file": "src/ocr/label_extractor.py",
+      "description": "Next we extract pickup phrase only if this is Online Pickup Order",
+      "pattern": "^[^\\S\\n]*\\(pickup_line, pickup_line_index\\) = self\\._infer_pickup_phrase_line\\("
+    },
+    {
+      "file": "src/ocr/label_extractor.py",
+      "description": "## How to identify line containing Pickup Phrase\n\nBased on label format, pickup phrase and qty line (line containing 1of1) will be in same row. Sometimes Azure OCR may club both pickup phrase and 1of1 text in the single line. This usually happens when the pickup phrase is long in length. So we first check if the qty_line has **just** qty_line text (we call it pure qty_line). We do this by matching the text of line with the regex match of qty_line. \n\nIf the qty_line is *not* pure qty_line then we know that pickup phrase is also present in the same line. \nIf the qty_line is pure qty_line then we know that some other line in candidate labels contains the pickup phrase. So we find the line which is \"closest\" to qty_line.",
+      "pattern": "^[^\\S\\n]*is_pure_qty = self\\._is_pure_qty_line\\(qty_line, qty_match\\)"
+    },
+    {
+      "file": "src/ocr/label_extractor.py",
+      "description": "In order to find which line is closest to qty_line, we can use the perpendicular distance to order line. Since we know that both qty_line and pickup phrase appear in same row of the label, their perpendicular distance to order line should more or less be same. \n\nTherefore for all the lines, we subtract their distance to order line with qty_line's distance to order line. The logic here is that the resulting difference should be near 0 for the pickup phrase line. In order to elimintate other lines we compare it with a threshold value.",
+      "pattern": "^[^\\S\\n]*diff = abs\\(qty_line\\.distance_to_order_line - line\\.distance_to_order_line\\)",
+      "title": "Closest to qty_line"
+    },
+    {
+      "file": "src/ocr/label_extractor.py",
+      "description": "We calculate threshold as half the width of the bounding box of qty_line. Since this side edge of the bounding box can have a slope, we calculate the width by using Pythagoras theorum.\n\nSince we know that the approx width of pickup phrase will be same as qty_line (because the font size on printed label for both are almost same), and we know both the line is in same row, any line whose diff is more than the threshold can be safely ignored.",
+      "pattern": "^[^\\S\\n]*threshold = \\(",
+      "title": "qty_line threshold"
+    },
+    {
+      "file": "src/ocr/label_extractor.py",
+      "description": "Finally we then sort all the lines whose diff falls within threshold value and take the one whose diff is smallest. This becomes our pickup phrase line.",
+      "pattern": "^[^\\S\\n]*distance_difference\\.sort\\(key=lambda x: x\\[0\\]\\)"
+    },
+    {
+      "file": "src/ocr/label_extractor.py",
+      "description": "## How to identify line containing Pickup Phrase Contd...\n\nIn case we are not able to detect the qty_line, the best we can do is assume the next line in candidate labels is pickup phrase. Remember the candidate labels here are sorted by their distance to order_line.\nHowever it can be the case where the next line could infact be the qty tag but we were not able to infer it as qty_line. This happens when the text is not correctly recognized by Azure OCR (for example 1offf1), in which casae our REGEX match to infer qty_line will fail. To eliminate such lines we check if the line contains **only** ASCII character. Pickup phrase line will never contain only ASCII characters so we can ignore the line if `is_ascii` check is `True` and we pick the next line.",
+      "pattern": "^[^\\S\\n]*if qty_line is None:"
+    },
+    {
+      "file": "src/ocr/label_extractor.py",
+      "description": "Next we want to infer item_name_CN. Since we know item name will always be *below* qty_line, we find out the next line which is after qty_line or pickup_phrase line (if detected) and slice the candidate label using this index.",
+      "pattern": "^[^\\S\\n]*item_name_cn, item_name_cn_line = self\\._infer_item_name\\("
+    },
+    {
+      "file": "src/ocr/label_extractor.py",
+      "description": "## Identifying Item Name\n\nThe candidate labels at this stage will contain all lines after qty_line so the label format at this stage is as follows - \n\n```\ncustomer_name (optional)\nitem_name_CN\nitem_name_EN\n...\n...\n(others)\n```\n\nWe may or may not have customer name in candidate labels. Since customer name can have arbitrary text we don't know how to identify it. Moreover customer name is optional and may not be present in all the labels. However we do know that item name in chinese will immedieately precede item name in English.\n\nDo to identify the item name in chinese the key is to first identify the `item_name_EN` line (line containing item name in English). We can then take the line *above* item_name_EN line with reasonable confidence that it will be item name in Chinese.\n\nTo identify `item_name_EN` we check if all the characters in the line is ASCII.",
+      "pattern": "^[^\\S\\n]*is_pure_english = \\[is_ascii\\(line\\.line\\.text\\) for line in lines\\]"
+    },
+    {
+      "file": "src/ocr/label_extractor.py",
+      "description": "Finally we return all the extracted lines as `OrderLabelInfo`",
+      "pattern": "^[^\\S\\n]*return OrderLabelInfo\\(order_number_info, pickup_phrase_info, item_name_cn_info\\)"
+    }
+  ]
+}

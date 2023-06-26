@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "projectName": {
+      "value": "labelreader"
+    },
+    "projectEnvironment": {
+      "value": "demo"
+    },
+    "iotHubSkuName": {
+      "value": "S1"
+    },
+    "iotHubSkuCapacity": {
+      "value": 1
+    },
+    "msgRetentionDays": {
+      "value": 1
+    },
+    "d2cPartitions": {
+      "value": 4
+    },
+    "sku": {
+      "value": "pergb2018"
+    },
+    "dataRetention": {
+      "value": 30
+    },
+    "restoreCogsService": {
+      "value": false
+    },
+    "acrSku": {
+      "value": "Basic"
+    }
+  }
+}

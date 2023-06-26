@@ -1,0 +1,12 @@
+{
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        ".",
+        "-p",
+        "*test_*.py"
+    ],
+    "code-runner.executorMap": {
+        "python": "export PYTHONPATH=$workspaceRoot && $pythonPath -u $fullFileName"
+    }
+}

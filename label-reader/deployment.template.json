@@ -1,0 +1,366 @@
+{
+  "$schema-template": "4.0.0",
+  "modulesContent": {
+    "$edgeAgent": {
+      "properties.desired": {
+        "schemaVersion": "1.1",
+        "runtime": {
+          "type": "docker",
+          "settings": {
+            "minDockerVersion": "v1.25",
+            "loggingOptions": "",
+            "registryCredentials": {
+              "acr": {
+                "username": "${ACR_USERNAME}",
+                "password": "${ACR_PASSWORD}",
+                "address": "${ACR_ADDRESS}"
+              }
+            }
+          }
+        },
+        "systemModules": {
+          "edgeAgent": {
+            "type": "docker",
+            "settings": {
+              "image": "mcr.microsoft.com/azureiotedge-agent:${IOT_EDGE_RUNTIME_VERSION}",
+              "createOptions": {}
+            }
+          },
+          "edgeHub": {
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "mcr.microsoft.com/azureiotedge-hub:${IOT_EDGE_RUNTIME_VERSION}",
+              "createOptions": {
+                "HostConfig": {
+                  "PortBindings": {
+                    "5671/tcp": [
+                      {
+                        "HostPort": "5671"
+                      }
+                    ],
+                    "8883/tcp": [
+                      {
+                        "HostPort": "8883"
+                      }
+                    ],
+                    "443/tcp": [
+                      {
+                        "HostPort": "443"
+                      }
+                    ],
+                    "9600/tcp": [
+                      {
+                        "HostPort": "9600"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "modules": {
+          "label_extraction": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "startupOrder": 1,
+            "settings": {
+              "image": "${MODULES.label_extraction}",
+              "createOptions": {
+                "NetworkingConfig": {
+                  "EndpointsConfig": {
+                    "host": {}
+                  }
+                },
+                "HostConfig": {
+                  "NetworkMode": "host",
+                  "Privileged": true
+                }
+              }
+            },
+            "env": {
+              "FRAME_RATE_UI": {
+                "value": "${FRAME_RATE_UI}"
+              },
+              "FRAME_RATE_CAMERA": {
+                "value": "${FRAME_RATE_CAMERA}"
+              },
+              "FRAME_SIZE_UI": {
+                "value": "${FRAME_SIZE_UI}"
+              },
+              "FRAME_SIZE_EDGE_MODEL": {
+                "value": "${FRAME_SIZE_EDGE_MODEL}"
+              },
+              "FRAME_SIZE_QUEUE": {
+                "value": "${FRAME_SIZE_QUEUE}"
+              },
+              "FRAME_SIZE_OCR": {
+                "value": "${FRAME_SIZE_OCR}"
+              },
+              "CAMERA_PATH": {
+                "value": "${CAMERA_PATH}"
+              },
+              "VID_STREAM_INTERNAL_URL": {
+                "value": "${VID_STREAM_INTERNAL_URL}"
+              },
+              "ORDER_INFO_INTERNAL_URL": {
+                "value": "${ORDER_INFO_INTERNAL_URL}"
+              },
+              "STATUS_INTERNAL_URL": {
+                "value": "${STATUS_INTERNAL_URL}"
+              },
+              "ADMIN_INTERNAL_URL": {
+                "value": "${ADMIN_INTERNAL_URL}"
+              },
+              "EDGE_MODEL_LOCAL_PATH": {
+                "value": "${EDGE_MODEL_LOCAL_PATH}"
+              },
+              "EDGE_MODEL_DB_THRESHOLD": {
+                "value": "${EDGE_MODEL_DB_THRESHOLD}"
+              },
+              "EDGE_MODEL_DB_BOX_THRESHOLD": {
+                "value": "${EDGE_MODEL_DB_BOX_THRESHOLD}"
+              },
+              "EDGE_MODEL_DB_MAX_CANDIDATE": {
+                "value": "${EDGE_MODEL_DB_MAX_CANDIDATE}"
+              },
+              "EDGE_MODEL_DB_UNCLIP_RATIO": {
+                "value": "${EDGE_MODEL_DB_UNCLIP_RATIO}"
+              },
+              "EDGE_MODEL_DB_USE_DILATION": {
+                "value": "${EDGE_MODEL_DB_USE_DILATION}"
+              },
+              "EDGE_MODEL_DB_SCORE_MODE": {
+                "value": "${EDGE_MODEL_DB_SCORE_MODE}"
+              },
+              "TEXT_DETECTION_VALIDATION_BOUNDING_BOX_THRESHOLD_LOW": {
+                "value": "${TEXT_DETECTION_VALIDATION_BOUNDING_BOX_THRESHOLD_LOW}"
+              },
+              "TEXT_DETECTION_VALIDATION_BOUNDING_BOX_THRESHOLD_LABEL": {
+                "value": "${TEXT_DETECTION_VALIDATION_BOUNDING_BOX_THRESHOLD_LABEL}"
+              },
+              "TEXT_DETECTION_VALIDATION_SKIP_FRAME_COUNT": {
+                "value": "${TEXT_DETECTION_VALIDATION_SKIP_FRAME_COUNT}"
+              },
+              "SPEECH_SYNTHESIS_VOICE_NAME": {
+                "value": "${SPEECH_SYNTHESIS_VOICE_NAME}"
+              },
+              "SPEECH_SYNTHESIS_LANGUAGE": {
+                "value": "${SPEECH_SYNTHESIS_LANGUAGE}"
+              },
+              "SPEECH_SYNTHESIS_STYLE": {
+                "value": "${SPEECH_SYNTHESIS_STYLE}"
+              },
+              "SPEECH_SYNTHESIS_PROFILE_RATE": {
+                "value": "${SPEECH_SYNTHESIS_PROFILE_RATE}"
+              },
+              "SPEECH_SYNTHESIS_PROFILE_PITCH": {
+                "value": "${SPEECH_SYNTHESIS_PROFILE_PITCH}"
+              },
+              "OCR_CONFIDENCE_THRESHOLD": {
+                "value": "${OCR_CONFIDENCE_THRESHOLD}"
+              },
+              "FEATURE_SKIP_FRAME": {
+                "value": "${FEATURE_SKIP_FRAME}"
+              },
+              "DUPLICATE_ORDER_CACHE_MAX_LENGTH": {
+                "value": "${DUPLICATE_ORDER_CACHE_MAX_LENGTH}"
+              },
+              "DUPLICATE_ORDER_CACHE_MAX_AGE_IN_SECONDS": {
+                "value": "${DUPLICATE_ORDER_CACHE_MAX_AGE_IN_SECONDS}"
+              },
+              "AZURE_COGNITIVE_SERVICE_FORMRECOG_KEY": {
+                "value": "${AZURE_COGNITIVE_SERVICE_FORMRECOG_KEY}"
+              },
+              "AZURE_COGNITIVE_SERVICE_FORMRECOG_ENDPOINT": {
+                "value": "${AZURE_COGNITIVE_SERVICE_FORMRECOG_ENDPOINT}"
+              },
+              "AZURE_COGNITIVE_SERVICE_FORMRECOG_MODEL_ID": {
+                "value": "${AZURE_COGNITIVE_SERVICE_FORMRECOG_MODEL_ID}"
+              },
+              "AZURE_COGNITIVE_SERVICE_SPEECH_KEY": {
+                "value": "${AZURE_COGNITIVE_SERVICE_SPEECH_KEY}"
+              },
+              "AZURE_COGNITIVE_SERVICE_SPEECH_ENDPOINT": {
+                "value": "${AZURE_COGNITIVE_SERVICE_SPEECH_ENDPOINT}"
+              },
+              "AZURE_COGNITIVE_SERVICE_SPEECH_TIMEOUT": {
+                "value": "${AZURE_COGNITIVE_SERVICE_SPEECH_TIMEOUT}"
+              },
+              "APPINSIGHTS_CONNECTION_STRING": {
+                "value": "$APPINSIGHTS_CONNECTION_STRING"
+              },
+              "STORE_ID": {
+                "value": "${STORE_ID}"
+              },
+              "LOG_LEVEL": {
+                "value": "${LOG_LEVEL}"
+              },
+              "BLOB_STORAGE_CONN_STRING": {
+                "value": "$BLOB_STORAGE_CONN_STRING"
+              },
+              "AZURE_BLOB_STORAGE_CONTAINER_NAME": {
+                "value": "$AZURE_BLOB_STORAGE_CONTAINER_NAME"
+              },
+              "NUM_IMAGES_CAP_PER_HOUR": {
+                "value": "${NUM_IMAGES_CAP_PER_HOUR}"
+              },
+              "LC_ALL": {
+                "value": "${LC_ALL}"
+              },
+              "APPLICATIONINSIGHTS_STATSBEAT_DISABLED_ALL": {
+                "value": "${APPLICATIONINSIGHTS_STATSBEAT_DISABLED_ALL}"
+              }
+            }
+          },
+          "web_app_api": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "startupOrder": 0,
+            "settings": {
+              "image": "${MODULES.web_app_api}",
+              "createOptions": {
+                "HostConfig": {
+                  "PortBindings": {
+                    "7001/tcp": [
+                      {
+                        "HostPort": "7001"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "env": {
+              "LC_ALL": {
+                "value": "${LC_ALL}"
+              },
+              "APPINSIGHTS_CONNECTION_STRING": {
+                "value": "$APPINSIGHTS_CONNECTION_STRING"
+              },
+              "BLOB_STORAGE_CONN_STRING": {
+                "value": "$BLOB_STORAGE_CONN_STRING"
+              },
+              "AZURE_BLOB_STORAGE_CONTAINER_NAME": {
+                "value": "$AZURE_BLOB_STORAGE_CONTAINER_NAME"
+              },
+              "LOG_LEVEL": {
+                "value": "${LOG_LEVEL}"
+              },
+              "STORE_ID": {
+                "value": "${STORE_ID}"
+              },
+              "APPLICATIONINSIGHTS_STATSBEAT_DISABLED_ALL": {
+                "value": "${APPLICATIONINSIGHTS_STATSBEAT_DISABLED_ALL}"
+              }
+            }
+          },
+          "web_app_ui_mvp": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "startupOrder": 2,
+            "settings": {
+              "image": "${MODULES.web_app_ui_mvp}",
+              "createOptions": {
+                "ExposedPorts": {
+                  "8080/tcp": {}
+                },
+                "HostConfig": {
+                  "PortBindings": {
+                    "8080/tcp": [
+                      {
+                        "HostPort": "8080"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "rtsp_server": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "startupOrder": 0,
+            "settings": {
+              "image": "aler9/rtsp-simple-server",
+              "createOptions": {
+                "ExposedPorts": {
+                  "8554/tcp": {}
+                },
+                "HostConfig": {
+                  "PortBindings": {
+                    "8554/tcp": [
+                      {
+                        "HostPort": "8554"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "env": {
+              "RTSP_PROTOCOLS": {
+                "value": "tcp"
+              }
+            }
+          },
+          "IoTEdgeMetricsCollector": {
+            "settings": {
+              "image": "mcr.microsoft.com/azureiotedge-metrics-collector:1.0",
+              "createOptions": {}
+            },
+            "type": "docker",
+            "env": {
+              "ResourceId": {
+                "value": "$IOT_HUB_RESOURCE_ID"
+              },
+              "UploadTarget": {
+                "value": "AzureMonitor"
+              },
+              "LogAnalyticsWorkspaceId": {
+                "value": "$LOG_ANALYTICS_WORKSPACE_ID"
+              },
+              "LogAnalyticsSharedKey": {
+                "value": "$LOG_ANALYTICS_SHARED_KEY"
+              },
+              "MetricsEndpointsCSV": {
+                "value": "http://edgeAgent:9600/metrics,http://edgeHub:9600/metrics"
+              },
+              "OtherConfig": {
+                "value": "<See https://aka.ms/edgemon-config for details>"
+              },
+              "AzureDomain": {
+                "value": "$LOG_ANALYTICS_AZURE_DOMAIN"
+              }
+            },
+            "status": "running",
+            "restartPolicy": "always",
+            "version": "1.0"
+          }
+        }
+      }
+    },
+    "$edgeHub": {
+      "properties.desired": {
+        "schemaVersion": "1.1",
+        "routes": {
+          "label_extraction_ToIoTHub": "FROM /messages/modules/label_extraction/outputs/* INTO $upstream",
+          "web_app_api_ToIoTHub": "FROM /messages/modules/web_app_api/outputs/* INTO $upstream"
+        },
+        "storeAndForwardConfiguration": {
+          "timeToLiveSecs": 7200
+        }
+      }
+    }
+  }
+}

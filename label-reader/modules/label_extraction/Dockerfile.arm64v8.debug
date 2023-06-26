@@ -1,0 +1,32 @@
+FROM python:3.9-bullseye
+
+#
+# install prerequisites (many of these are for numpy)
+#
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    libgl1-mesa-glx \
+    ffmpeg \
+    libgeos-dev \
+    python3-opencv \
+    python3-pandas \
+    && rm -rf /var/lib/apt/lists/*
+
+#
+# install python packages
+#
+RUN pip3 --disable-pip-version-check --no-cache-dir install \
+    opencv-python-headless==4.6.0.66 \
+    Shapely==1.8.1.post1 \
+    onnxruntime==1.12.1 \
+    Pillow==9.2.0
+
+WORKDIR /app
+COPY requirements.txt ./
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+COPY local_data /app/local_data
+COPY . .
+
+CMD [ "python3", "-u", "./main.py" ]

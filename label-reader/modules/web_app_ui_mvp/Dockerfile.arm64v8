@@ -1,0 +1,7 @@
+FROM arm64v8/nginx:alpine
+
+WORKDIR /app
+
+COPY . .
+
+COPY ./nginx.conf /etc/nginx/nginx.conf
