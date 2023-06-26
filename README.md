@@ -6,6 +6,10 @@ A vision-based order pickup solution which leverages ML on the edge capabilities
 
 Solution [high level architecture](./docs/high-level-architecture.md)
 
+## Solution demo
+
+
+
 ## Solution user guide
 
 This solution can be demoed or experimented in two following different modes:
