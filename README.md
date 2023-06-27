@@ -8,7 +8,7 @@ Solution [high level architecture](./docs/high-level-architecture.md)
 
 ## Solution demo
 
-https://github.com/Azure-Samples/vision-on-edge-accelerator/assets/70320868/2c998034-e9dd-43bb-a09a-4c896de8b232
+https://github.com/Azure-Samples/vision-on-edge-accelerator/assets/70320868/52953ba4-b8f4-4df9-b9f8-946cbad56ffb
 
 ## Solution user guide
 
